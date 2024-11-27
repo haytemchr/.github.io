@@ -669,7 +669,7 @@ body {
 
 .experience-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .experience-card h3 {
@@ -729,7 +729,7 @@ body {
 
 .skill-category:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .skill-category h3 {
@@ -819,6 +819,34 @@ body {
     color: var(--accent-color);
     font-size: 0.9rem;
     margin: 10px 0;
+}
+
+.project-button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    background: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.project-button:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+}
+
+.project-button i {
+    margin-left: 5px;
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.project-button:hover i {
+    transform: translateX(3px);
 }
 
 /* Contact */
@@ -1121,4 +1149,32 @@ body {
     .logo-text {
         font-size: 2rem;
     }
+}
+
+.game-button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    background: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.game-button:hover {
+    transform: translateX(5px);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+}
+
+.game-button i {
+    margin-left: 5px;
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.game-button:hover i {
+    transform: translateX(3px);
 }
