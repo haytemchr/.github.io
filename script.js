@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Animation du header
-    const headerContent = document.querySelector('.header-content');
+    const headerContent = document.querySelector('.header-content'); 
     if (headerContent) {
         setTimeout(() => {
             headerContent.style.opacity = '1';
