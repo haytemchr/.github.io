@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelRush - Haytem Chryat</title>
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .pixelrush-container {
+            display: flex;
+            min-height: 100vh;
+            padding: 2rem;
+            background: var(--primary-color);
+        }
+
+        .code-section {
+            flex: 1;
+            padding: 2rem;
+            background: #1e1e1e;
+            border-radius: 10px;
+            margin-right: 2rem;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .code-section pre {
+            color: #d4d4d4;
+            font-family: 'Consolas', monospace;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .download-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .download-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            margin-top: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .download-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .drive-note {
+            margin-top: 2rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            padding: 0.5rem 1rem;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+
+    <div class="pixelrush-container">
+        <div class="code-section">
+            <pre>
+                import pygame
+                import random
+                import sys
+                import os
+                import math
+                import time
+                
+                pygame.init()
+                pygame.mixer.init()
+                BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+                background_image_path = os.path.join(BASE_DIR, "assets", "background.png")
+                clcikmenu_sound_path = os.path.join(BASE_DIR, "assets", "clcikmenu.mp3")
+                menubckg_image_path = os.path.join(BASE_DIR, "assets", "menubckg.png")
+                menuselect_sound_path = os.path.join(BASE_DIR, "assets", "menuselect.mp3")
+                logo_image_path = os.path.join(BASE_DIR, "assets", "PIXELRUSH-LOGO.jpg")
+                sneaky_snitch_sound_path = os.path.join(BASE_DIR, "assets", "Sneaky-Snitch(chosic.com).mp3")
+                
+                # Parametre de ecran
+                WINDOW_WIDTH = 800
+                WINDOW_HEIGHT = 600
+                FPS = 60
+                
+                # Couleurs
+                WHITE = (255, 255, 255)
+                BLACK = (0, 0, 0)
+                RED = (255, 0, 0)
+                BLUE = (0, 0, 255)
+                YELLOW = (255, 255, 0)
+                PURPLE = (255, 0, 255)
+                GREEN = (0, 255, 0)
+                
+                # Config du joueur
+                PLAYER_SIZE = 20
+                PLAYER_X = 100
+                PLAYER_Y = WINDOW_HEIGHT - 100
+                JUMP_FORCE = -15
+                GRAVITY = 0.8
+                
+                # Config des obstacles
+                OBSTACLE_WIDTH = 20
+                OBSTACLE_HEIGHT = 50
+                BARRIER_WIDTH = 20
+                BARRIER_HEIGHT = WINDOW_HEIGHT
+                
+                # Config des collectibles
+                COLLECTIBLE_SIZE = 15
+                SHIELD_DURATION = 5  # secondes
+                SPEED_BOOST_DURATION = 3  # secondes
+                SPEED_BOOST_MULTIPLIER = 1.5
+                
+                # Config du score
+                BASE_SCORE_INCREMENT = 1
+                COMBO_MULTIPLIER_INCREMENT = 0.5
+                MAX_COMBO_MULTIPLIER = 5.0
+                
+                class Collectible:
+                    def __init__(self, x, y, type_):
+                        self.rect = pygame.Rect(x, y, COLLECTIBLE_SIZE, COLLECTIBLE_SIZE)
+                        self.type = type_  # 'star', 'shield', 'speed'
+                        self.color = YELLOW if type_ == 'star' else PURPLE if type_ == 'shield' else GREEN
+                        
+                    def update(self, speed):
+                        self.rect.x -= speed
+                
+                class Player:
+                    def __init__(self, controls=None, is_player_two=False):
+                        start_y = WINDOW_HEIGHT - 100
+                        start_x = PLAYER_X - 50 if is_player_two else PLAYER_X
+                        self.rect = pygame.Rect(start_x, start_y, PLAYER_SIZE, PLAYER_SIZE)
+                        self.velocity_y = 0
+                        self.is_jumping = False
+                        self.colors = [RED, GREEN, BLUE]
+                        self.current_color_index = 0
+                        self.color = self.colors[self.current_color_index]
+                        self.score = 0
+                        self.combo_multiplier = 1.0
+                        self.obstacles_passed = 0
+                        self.shields = 0
+                        self.has_speed_boost = False
+                        self.speed_boost_end_time = 0
+                        self.shield_active = False
+                        self.shield_end_time = 0
+                        self.controls = controls or {'jump': pygame.K_SPACE, 'color': pygame.K_c, 'shield': pygame.K_a}
+                        self.is_player_two = is_player_two
+                
+                    def jump(self):
+                        if not self.is_jumping:
+                            self.velocity_y = JUMP_FORCE
+                            self.is_jumping = True
+                            return True
+                        return False
+                
+                    def change_color(self):
+                        self.current_color_index = (self.current_color_index + 1) % len(self.colors)
+                        self.color = self.colors[self.current_color_index]
+                        return True
+                
+                    def use_shield(self):
+                        if self.shields > 0:
+                            self.shields -= 1
+                            self.shield_active = True
+                            self.shield_end_time = time.time() + SHIELD_DURATION
+                            return True
+                        return False
+                
+                    def update(self):
+                        self.velocity_y += GRAVITY
+                        self.rect.y += self.velocity_y
+                
+                        # MAJ du bouclier
+                        if self.shield_active and time.time() > self.shield_end_time:
+                            self.shield_active = False
+                
+                        # MAJ du boost de vitesse
+                        if self.has_speed_boost and time.time() > self.speed_boost_end_time:
+                            self.has_speed_boost = False
+                
+                        # Collision avec sol
+                        if self.rect.bottom > WINDOW_HEIGHT - 50:
+                            self.rect.bottom = WINDOW_HEIGHT - 50
+                            self.velocity_y = 0
+                            self.is_jumping = False
+                
+                    def add_score(self, points):
+                        self.obstacles_passed += 1
+                        self.combo_multiplier = min(1.0 + (self.obstacles_passed * COMBO_MULTIPLIER_INCREMENT), 
+                                                  MAX_COMBO_MULTIPLIER)
+                        self.score += int(points * self.combo_multiplier)
+                
+                    def reset_combo(self):
+                        self.obstacles_passed = 0
+                        self.combo_multiplier = 1.0
+                
+                class Obstacle:
+                    def __init__(self, x, is_barrier=False):
+                        self.width = 20
+                        self.height = random.randint(30, 80)
+                        self.x = x
+                        self.y = WINDOW_HEIGHT - 50 - self.height
+                        self.color = BLACK  # Tous les obstacles normaux sont noirs
+                        self.speed = 5
+                        self.is_barrier = is_barrier
+                
+                    def update(self, speed):
+                        self.x -= speed
+                
+                class MovingObstacle:
+                    def __init__(self, x, y, move_vertical=True):
+                        self.width = 20
+                        self.height = 40
+                        self.x = x
+                        self.y = y
+                        self.move_vertical = move_vertical
+                        self.direction = 1
+                        self.speed = 5
+                        self.color = BLACK  # Les obstacles mobiles sont aussi noirs
+                        self.is_barrier = False
+                
+                    def update(self, game_speed):
+                        self.x -= game_speed
+                        if self.move_vertical:
+                            self.rect.y += self.direction * self.speed
+                            if abs(self.rect.y - self.original_y) > self.max_distance:
+                                self.direction *= -1
+                
+                class DoubleBarrier:
+                    def __init__(self, x):
+                        self.width = 5  # Mur ultra mince (était 10)
+                        self.speed = 5
+                        
+                        # Un seul rectangle pour tout le mur
+                        self.rect = pygame.Rect(x, 0, self.width, WINDOW_HEIGHT)
+                        
+                        # Couleur aléatoire pour le mur
+                        self.color = random.choice([(255, 0, 0), (0, 255, 0), (0, 0, 255)])  # Rouge, Vert ou Bleu
+                        
+                    def update(self, game_speed):
+                        # Déplacer le mur vers la gauche
+                        self.rect.x -= game_speed
+                    
+                    def draw(self, screen):
+                        pygame.draw.rect(screen, self.color, self.rect)
+                        pygame.draw.rect(screen, WHITE, self.rect, 1)  # Bordure blanche
+                    
+                    def is_off_screen(self):
+                        return self.rect.right < 0
+                
+                    def get_x(self):
+                        return self.rect.x
+                
+                class Game:
+                    def __init__(self):
+                        self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+                        pygame.display.set_caption("Pixel Rush")
+                        self.clock = pygame.time.Clock()
+                        
+                        self.game_state = "menu"
+                        self.menu_options = ["1 Joueur", "2 Joueurs", "Règles", "Quitter"]
+                        self.selected_option = 0
+                        
+                        # Chargement des images
+                        try:
+                            current_dir = os.path.dirname(os.path.abspath(__file__))
+                            
+                            # Logo du jeu
+                            logo_path = os.path.join(current_dir, "assets", "PIXELRUSH-LOGO.jpg")
+                            self.logo = pygame.image.load(logo_path)
+                            logo_ratio = self.logo.get_height() / self.logo.get_width()
+                            self.logo = pygame.transform.scale(self.logo, (400, int(400 * logo_ratio)))
+                            
+                            # Fond du menu
+                            menu_bg_path = os.path.join(current_dir, "assets", "menubckg.png")
+                            self.menu_background = pygame.image.load(menu_bg_path)
+                            self.menu_background = pygame.transform.scale(self.menu_background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+                            
+                            # Fond du jeu
+                            game_bg_path = os.path.join(current_dir, "assets", "background.png")
+                            self.game_background = pygame.image.load(game_bg_path)
+                            self.game_background = pygame.transform.scale(self.game_background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+                        except Exception as e:
+                            print(f"Erreur lors du chargement des images: {str(e)}")
+                            self.logo = None
+                            self.menu_background = None
+                            self.game_background = None
+                
+                        self.load_sounds()
+                        self.multiplayer = False
+                        self.reset_game()
+                        self.current_barrier = None  # Pour suivre le mur coloré actuel
+                
+                    def load_sounds(self):
+                        # SFX actions avec volume réduit (0.2 = 20% du volume)
+                        self.jump_sound = pygame.mixer.Sound(buffer=self.generate_beep_sound(440, 100))      # La
+                        self.jump_sound.set_volume(0.2)
+                        
+                        self.color_change_sound = pygame.mixer.Sound(buffer=self.generate_beep_sound(523, 100))  # Do
+                        self.color_change_sound.set_volume(0.2)
+                        
+                        self.collision_sound = pygame.mixer.Sound(buffer=self.generate_beep_sound(220, 200))  # La bas
+                        self.collision_sound.set_volume(0.2)
+                        
+                        self.collect_sound = pygame.mixer.Sound(buffer=self.generate_beep_sound(660, 50))    # Mi
+                        self.collect_sound.set_volume(0.2)
+                        
+                        self.shield_sound = pygame.mixer.Sound(buffer=self.generate_beep_sound(880, 100))     # La haut
+                        self.shield_sound.set_volume(0.2)
+                
+                        # Sons du menu
+                        current_dir = os.path.dirname(os.path.abspath(__file__))
+                        try:
+                            self.menu_move_sound = pygame.mixer.Sound(os.path.join(current_dir, "assets", "clcikmenu.mp3"))
+                            self.menu_move_sound.set_volume(0.3)
+                            
+                            self.menu_select_sound = pygame.mixer.Sound(os.path.join(current_dir, "assets", "menuselect.mp3"))
+                            self.menu_select_sound.set_volume(0.3)
+                        except Exception as e:
+                            print(f"Erreur lors du chargement des sons du menu: {str(e)}")
+                        
+                        # Charger la musique du menu avec le chemin absolu
+                        try:
+                            self.menu_music = os.path.join(current_dir, "assets", "Sneaky-Snitch(chosic.com).mp3")
+                        except Exception as e:
+                            print(f"Erreur lors du chargement de la musique: {str(e)}")
+                
+                    def generate_beep_sound(self, frequency, duration):
+                        sample_rate = 44100
+                        num_samples = int(sample_rate * duration / 1000.0)
+                        samples = bytearray()
+                        
+                        for i in range(num_samples):
+                            value = int(128 + 127 * math.sin(2.0 * math.pi * frequency * i / sample_rate))
+                            value = max(0, min(255, value))
+                            samples.extend([value, value])
+                        
+                        return samples
+                
+                    def reset_game(self):
+                        # CTRL pour le joueur 1
+                        controls_p1 = {
+                            'jump': pygame.K_SPACE,
+                            'color': pygame.K_c,
+                            'shield': pygame.K_a
+                        }
+                        
+                        # CTRL pour le joueur 2
+                        controls_p2 = {
+                            'jump': pygame.K_UP,
+                            'color': pygame.K_RSHIFT,
+                            'shield': pygame.K_RCTRL
+                        }
+                        
+                        self.player = Player(controls_p1)
+                        self.player2 = Player(controls_p2, True) if self.multiplayer else None
+                        self.obstacles = []
+                        self.moving_obstacles = []
+                        self.double_barriers = []
+                        self.collectibles = []
+                        self.game_speed = 5
+                        self.score = 0
+                        self.game_over = False
+                        self.obstacle_timer = 0
+                        self.min_obstacle_distance = 300
+                        self.slow_motion = False
+                        self.slow_motion_end_time = 0
+                        self.particles = []
+                        self.last_barrier_score = 0  # Pour suivre quand le dernier mur est apparu
+                        self.last_barrier_x = float('-inf')  # Réinitialiser la position du dernier mur
+                        self.current_barrier = None  # Réinitialiser le mur actuel
+                
+                    def create_particles(self, x, y, color):
+                        for _ in range(10):
+                            angle = random.uniform(0, 2 * math.pi)
+                            speed = random.uniform(2, 5)
+                            self.particles.append({
+                                'x': x,
+                                'y': y,
+                                'dx': math.cos(angle) * speed,
+                                'dy': math.sin(angle) * speed,
+                                'color': color,
+                                'life': 30
+                            })
+                
+                    def update_particles(self):
+                        for particle in self.particles[:]:
+                            particle['x'] += particle['dx']
+                            particle['y'] += particle['dy']
+                            particle['life'] -= 1
+                            if particle['life'] <= 0:
+                                self.particles.remove(particle)
+                
+                    def handle_input(self):
+                        if self.game_state == "menu":
+                            # Démarrer la musique si elle n'est pas déjà en cours
+                            if not pygame.mixer.music.get_busy():
+                                pygame.mixer.music.load(self.menu_music)
+                                pygame.mixer.music.set_volume(0.5)
+                                pygame.mixer.music.play(-1)
+                            return self.handle_menu_input()
+                            
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                return False
+                            if event.type == pygame.KEYDOWN:
+                                if not self.game_over:
+                                    # Joueur 1
+                                    if event.key == self.player.controls['jump']:
+                                        if self.player.jump():
+                                            self.jump_sound.play()
+                                    elif event.key == self.player.controls['color']:
+                                        if self.player.change_color():
+                                            self.color_change_sound.play()
+                                            self.create_particles(self.player.rect.centerx, self.player.rect.centery, self.player.color)
+                                    elif event.key == self.player.controls['shield']:
+                                        if self.player.use_shield():
+                                            self.slow_motion = True
+                                            self.slow_motion_end_time = time.time() + 1
+                                    
+                                    # Joueur 2
+                                    if self.multiplayer and self.player2:
+                                        if event.key == self.player2.controls['jump']:
+                                            if self.player2.jump():
+                                                self.jump_sound.play()
+                                        elif event.key == self.player2.controls['color']:
+                                            if self.player2.change_color():
+                                                self.color_change_sound.play()
+                                                self.create_particles(self.player2.rect.centerx, self.player2.rect.centery, self.player2.color)
+                                        elif event.key == self.player2.controls['shield']:
+                                            if self.player2.use_shield():
+                                                self.slow_motion = True
+                                                self.slow_motion_end_time = time.time() + 1
+                                
+                                if event.key == pygame.K_r and self.game_over:
+                                    self.reset_game()
+                                elif event.key == pygame.K_ESCAPE:
+                                    self.game_state = "menu"
+                                    return True
+                        return True
+                
+                    def handle_menu_input(self):
+                        keys = pygame.key.get_pressed()
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                return False
+                            
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_UP:
+                                    self.selected_option = (self.selected_option - 1) % len(self.menu_options)
+                                    if hasattr(self, 'menu_move_sound'):
+                                        self.menu_move_sound.play()
+                                elif event.key == pygame.K_DOWN:
+                                    self.selected_option = (self.selected_option + 1) % len(self.menu_options)
+                                    if hasattr(self, 'menu_move_sound'):
+                                        self.menu_move_sound.play()
+                                elif event.key == pygame.K_RETURN:
+                                    if hasattr(self, 'menu_select_sound'):
+                                        self.menu_select_sound.play()
+                                    
+                                    if self.menu_options[self.selected_option] == "Quitter":
+                                        return False
+                                    elif self.menu_options[self.selected_option] == "Règles":
+                                        self.game_state = "rules"
+                                    else:
+                                        self.multiplayer = self.menu_options[self.selected_option] == "2 Joueurs"
+                                        self.game_state = "game"
+                                        self.reset_game()
+                                elif event.key == pygame.K_ESCAPE and self.game_state == "rules":
+                                    if hasattr(self, 'menu_select_sound'):
+                                        self.menu_select_sound.play()
+                                    self.game_state = "menu"
+                        return True
+                
+                    def update(self):
+                        if self.game_over:
+                            return
+                
+                        # MAJ Slowmo
+                        if self.slow_motion and time.time() > self.slow_motion_end_time:
+                            self.slow_motion = False
+                
+                        # Valeur vitesse du jeu
+                        speed_factor = 0.5 if self.slow_motion else 1.0
+                        current_game_speed = self.game_speed * speed_factor
+                
+                        # MAJ joueurs
+                        self.player.update()
+                        if self.multiplayer and self.player2:
+                            self.player2.update()
+                
+                        # MAJ score et vitesse
+                        self.score += 1
+                        self.game_speed = 5 + (self.score // 1000)
+                
+                        # Nettoyer les murs qui sont sortis de l'écran
+                        self.double_barriers = [barrier for barrier in self.double_barriers if not barrier.is_off_screen()]
+                
+                        # Nettoyer les obstacles qui chevauchent les murs
+                        if self.double_barriers:
+                            barrier = self.double_barriers[0]
+                            self.obstacles = [obs for obs in self.obstacles if obs.x + obs.width < barrier.get_x() or obs.x > barrier.get_x() + barrier.width]
+                            self.moving_obstacles = [obs for obs in self.moving_obstacles if obs.x + obs.width < barrier.get_x() or obs.x > barrier.get_x() + barrier.width]
+                
+                        # Generer obstacles
+                        if not self.obstacles or self.obstacles[-1].x < WINDOW_WIDTH - 400:
+                            # On ne génère un nouveau mur que s'il n'y en a pas d'autres à l'écran
+                            if len(self.double_barriers) == 0:
+                                obstacle_type = random.random()
+                                
+                                if obstacle_type < 0.6:  # 60% obstacle normal
+                                    self.obstacles.append(Obstacle(WINDOW_WIDTH))
+                                elif obstacle_type < 0.8:  # 20% obstacle mobile
+                                    y = random.randint(100, WINDOW_HEIGHT - 150)
+                                    self.moving_obstacles.append(MovingObstacle(WINDOW_WIDTH, y, move_vertical=True))
+                                else:  # 20% mur coloré
+                                    self.double_barriers.append(DoubleBarrier(WINDOW_WIDTH))
+                            else:
+                                # S'il y a déjà un mur, on met un obstacle normal mais PAS trop proche du mur
+                                barrier = self.double_barriers[0]
+                                if barrier.get_x() - WINDOW_WIDTH > 200:  # On vérifie qu'il y a assez d'espace
+                                    if random.random() < 0.7:  # 70% obstacle normal
+                                        self.obstacles.append(Obstacle(WINDOW_WIDTH))
+                                    else:  # 30% obstacle mobile
+                                        y = random.randint(100, WINDOW_HEIGHT - 150)
+                                        self.moving_obstacles.append(MovingObstacle(WINDOW_WIDTH, y, move_vertical=True))
+                
+                        # Genere collectibles avec des probabilités réduites
+                        if random.random() < 0.02:  # 2% de chance pour une étoile (réduit de 5%)
+                            min_height = WINDOW_HEIGHT - 250
+                            max_height = WINDOW_HEIGHT - 150
+                            y = random.randint(min_height, max_height)
+                            self.collectibles.append(Collectible(WINDOW_WIDTH, y, 'star'))
+                        if random.random() < 0.005:  # 0.5% de chance pour un bouclier (réduit de 1%)
+                            min_height = WINDOW_HEIGHT - 250
+                            max_height = WINDOW_HEIGHT - 150
+                            y = random.randint(min_height, max_height)
+                            self.collectibles.append(Collectible(WINDOW_WIDTH, y, 'shield'))
+                        if random.random() < 0.005:  # 0.5% de chance pour un boost de vitesse (réduit de 1%)
+                            min_height = WINDOW_HEIGHT - 250
+                            max_height = WINDOW_HEIGHT - 150
+                            y = random.randint(min_height, max_height)
+                            self.collectibles.append(Collectible(WINDOW_WIDTH, y, 'speed'))
+                
+                        # MAJ particules
+                        self.update_particles()
+                
+                        # MAJ + Verif des collisions pour tous les objets
+                        self.update_game_objects(current_game_speed)
+                
+                    def update_game_objects(self, current_game_speed):
+                        # MAJ obstacles normaux
+                        for obstacle in self.obstacles[:]:
+                            obstacle.update(current_game_speed)
+                            if obstacle.x < -obstacle.width:  
+                                self.obstacles.remove(obstacle)
+                            else:
+                                self.check_collision(obstacle)
+                
+                        # MAJ obstacles mobiles
+                        for obstacle in self.moving_obstacles[:]:
+                            if obstacle.move_vertical:
+                                if obstacle.y <= 100:  
+                                    obstacle.direction = 1
+                                elif obstacle.y >= WINDOW_HEIGHT - 150:  
+                                    obstacle.direction = -1
+                                obstacle.y += obstacle.direction * obstacle.speed
+                            else:
+                                if obstacle.x <= 100:  
+                                    obstacle.direction = 1
+                                elif obstacle.x >= WINDOW_WIDTH - 100:  
+                                    obstacle.direction = -1
+                                obstacle.x += obstacle.direction * obstacle.speed
+                
+                            if obstacle.x < -obstacle.width:
+                                self.moving_obstacles.remove(obstacle)
+                            else:
+                                self.check_collision(obstacle)
+                
+                        # MAJ barriere couleur
+                        for barrier in self.double_barriers[:]:
+                            barrier.update(current_game_speed)
+                            if barrier.rect.right < 0:  # Utiliser la deuxième barrière pour vérifier si complètement hors écran
+                                self.double_barriers.remove(barrier)
+                            else:
+                                self.check_double_barrier_collision(barrier)
+                
+                        # MAJ collectibles
+                        for collectible in self.collectibles[:]:
+                            collectible.update(current_game_speed)
+                            if collectible.rect.right < 0:
+                                self.collectibles.remove(collectible)
+                            else:
+                                self.check_collectible_collision(collectible)
+                
+                    def check_collision(self, obstacle):
+                        for player in [self.player, self.player2] if self.multiplayer else [self.player]:
+                            # Créer un rectangle pour la collision
+                            if isinstance(obstacle, MovingObstacle):
+                                obstacle_rect = pygame.Rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
+                            else:
+                                obstacle_rect = pygame.Rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
+                
+                            if player and player.rect.colliderect(obstacle_rect):
+                                if not player.shield_active:
+                                    self.handle_collision(player)
+                
+                    def check_double_barrier_collision(self, barrier):
+                        for player in [self.player, self.player2] if self.multiplayer else [self.player]:
+                            if player and player.rect.colliderect(barrier.rect):
+                                if not player.shield_active:
+                                    if player.color != barrier.color:
+                                        self.handle_collision(player)
+                
+                    def check_collectible_collision(self, collectible):
+                        for player in [self.player, self.player2] if self.multiplayer else [self.player]:
+                            if player and player.rect.colliderect(collectible.rect):
+                                if collectible.type == 'star':
+                                    player.add_score(100)
+                                elif collectible.type == 'shield':
+                                    player.shields += 1
+                                elif collectible.type == 'speed':
+                                    player.has_speed_boost = True
+                                    player.speed_boost_end_time = time.time() + SPEED_BOOST_DURATION
+                                self.collect_sound.play()
+                                self.create_particles(collectible.rect.centerx, collectible.rect.centery, collectible.color)
+                                self.collectibles.remove(collectible)
+                                break
+                
+                    def handle_collision(self, player):
+                        if not player.shield_active:
+                            self.game_over = True
+                            self.collision_sound.play()
+                            player.reset_combo()
+                
+                    def draw(self):
+                        # Fond noir par défaut
+                        self.screen.fill(BLACK)
+                        
+                        if self.game_state == "menu":
+                            self.draw_menu()
+                        elif self.game_state == "rules":
+                            self.draw_rules()
+                        else:
+                            # Afficher le fond du jeu
+                            if hasattr(self, 'game_background') and self.game_background:
+                                self.screen.blit(self.game_background, (0, 0))
+                            
+                            # Dessin sol avec une couleur plus visible
+                            pygame.draw.rect(self.screen, (50, 50, 50), (0, WINDOW_HEIGHT - 50, WINDOW_WIDTH, 50))
+                
+                            # Dessin particules
+                            for particle in self.particles:
+                                pygame.draw.circle(self.screen, particle['color'], 
+                                                 (int(particle['x']), int(particle['y'])), 2)
+                
+                            # Dessin obstacles avec une bordure blanche pour plus de visibilité
+                            for obstacle in self.obstacles + self.moving_obstacles:
+                                if isinstance(obstacle, Obstacle):
+                                    pygame.draw.rect(self.screen, obstacle.color, (obstacle.x, obstacle.y, obstacle.width, obstacle.height))
+                                    pygame.draw.rect(self.screen, WHITE, (obstacle.x, obstacle.y, obstacle.width, obstacle.height), 1)  
+                                else:
+                                    pygame.draw.rect(self.screen, obstacle.color, (obstacle.x, obstacle.y, obstacle.width, obstacle.height))
+                                    pygame.draw.rect(self.screen, WHITE, (obstacle.x, obstacle.y, obstacle.width, obstacle.height), 1)  
+                
+                            # Dessin barrières couleur avec bordure
+                            for barrier in self.double_barriers:
+                                barrier.draw(self.screen)
+                
+                            # Dessin collectibles avec bordure
+                            for collectible in self.collectibles:
+                                pygame.draw.rect(self.screen, collectible.color, collectible.rect)
+                                pygame.draw.rect(self.screen, WHITE, collectible.rect, 1)
+                
+                            # Dessin joueur avec bordure
+                            self.draw_player(self.player)
+                            if self.multiplayer and self.player2:
+                                self.draw_player(self.player2)
+                
+                            # Affichage Score et info
+                            self.draw_hud()
+                
+                        pygame.display.flip()
+                
+                    def draw_player(self, player):
+                        if player:
+                            pygame.draw.rect(self.screen, player.color, player.rect)
+                            # Ajouter une bordure blanche au joueur
+                            pygame.draw.rect(self.screen, WHITE, player.rect, 1)
+                            if player.shield_active:
+                                shield_rect = player.rect.inflate(10, 10)
+                                pygame.draw.rect(self.screen, PURPLE, shield_rect, 2)
+                
+                    def draw_hud(self):
+                        font = pygame.font.Font(None, 36)
+                        y_offset = 10
+                
+                        # Score + multiplicateur pour j1
+                        score_text = f"P1 Score: {self.player.score} (x{self.player.combo_multiplier:.1f})"
+                        shields_text = f"Shields: {self.player.shields}"
+                        score_surface = font.render(score_text, True, WHITE)
+                        shields_surface = font.render(shields_text, True, WHITE)
+                        self.screen.blit(score_surface, (10, y_offset))
+                        self.screen.blit(shields_surface, (10, y_offset + 30))
+                
+                        # Score + multiplicateur pour j2
+                        if self.multiplayer and self.player2:
+                            score_text2 = f"P2 Score: {self.player2.score} (x{self.player2.combo_multiplier:.1f})"
+                            shields_text2 = f"P2 Shields: {self.player2.shields}"
+                            score_surface2 = font.render(score_text2, True, WHITE)
+                            shields_surface2 = font.render(shields_text2, True, WHITE)
+                            self.screen.blit(score_surface2, (WINDOW_WIDTH - 300, y_offset))
+                            self.screen.blit(shields_surface2, (WINDOW_WIDTH - 300, y_offset + 30))
+                
+                        if self.game_over:
+                            game_over_font = pygame.font.Font(None, 74)
+                            game_over_text = game_over_font.render("Perdu !", True, WHITE)
+                            restart_text = font.render("Appuye sur R pour recommencer !", True, WHITE)
+                            self.screen.blit(game_over_text, 
+                                           (WINDOW_WIDTH//2 - game_over_text.get_width()//2, 
+                                            WINDOW_HEIGHT//2 - game_over_text.get_height()//2))
+                            self.screen.blit(restart_text, 
+                                           (WINDOW_WIDTH//2 - restart_text.get_width()//2, 
+                                            WINDOW_HEIGHT//2 + 50))
+                
+                    def draw_menu(self):
+                        # Afficher le fond du menu
+                        if hasattr(self, 'menu_background') and self.menu_background:
+                            self.screen.blit(self.menu_background, (0, 0))
+                        else:
+                            # Fallback à une couleur unie si l'image n'est pas chargée
+                            self.screen.fill((44, 42, 43))
+                
+                        # Afficher le logo au lieu du titre texte
+                        if self.logo:
+                            logo_x = (WINDOW_WIDTH - self.logo.get_width()) // 2
+                            logo_y = 50  
+                            self.screen.blit(self.logo, (logo_x, logo_y))
+                        else:
+                            # Fallback au titre texte si le logo ne peut pas être chargé
+                            title_font = pygame.font.Font(None, 74)
+                            title_text = title_font.render("PIXEL RUSH", True, YELLOW)
+                            title_rect = title_text.get_rect(center=(WINDOW_WIDTH // 2, 100))
+                            self.screen.blit(title_text, title_rect)
+                        
+                        menu_font = pygame.font.Font(None, 48)
+                        menu_y = 300  
+                        
+                        for i, option in enumerate(self.menu_options):
+                            color = RED if i == self.selected_option else WHITE
+                            text = menu_font.render(option, True, color)
+                            
+                            # Créer un rectangle semi-transparent derrière le texte
+                            padding = 10
+                            text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, menu_y + i * 60))
+                            bg_rect = text_rect.inflate(padding * 2, padding * 2)
+                            bg_surface = pygame.Surface((bg_rect.width, bg_rect.height))
+                            bg_surface.fill((0, 0, 0))
+                            bg_surface.set_alpha(128)
+                            self.screen.blit(bg_surface, bg_rect)
+                            
+                            self.screen.blit(text, text_rect)
+                
+                        pygame.display.flip()
+                
+                    def draw_rules(self):
+                        # Remplir avec une couleur de fond pour les règles
+                        rules_background = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+                        rules_background.fill((0, 0, 50))  
+                        self.screen.blit(rules_background, (0, 0))
+                
+                        # Titre
+                        title_font = pygame.font.Font(None, 64)
+                        title_surf = title_font.render("Règles du jeu", True, (255, 255, 0))
+                        title_rect = title_surf.get_rect(centerx=WINDOW_WIDTH//2, y=50)
+                        self.screen.blit(title_surf, title_rect)
+                
+                        # Règles
+                        rules_font = pygame.font.Font(None, 36)
+                        rules = [
+                            "Touches du jeu:",
+                            "- ESPACE pour sauter",
+                            "- C pour changer de couleur",
+                            "- A pour activer le bouclier",
+                            "",
+                            "Le but du jeu:",
+                            "- Éviter les obstacles noirs",
+                            "- Traverser les barrières de la même couleur",
+                            "- Collecter les étoiles jaunes pour le score",
+                            "- Collecter les bonus violets pour les boucliers",
+                            "- Collecter les bonus verts pour la vitesse",
+                            "",
+                            "Appuyez sur ECHAP pour revenir au menu"
+                        ]
+                
+                        for i, line in enumerate(rules):
+                            if line:  
+                                text_surf = rules_font.render(line, True, (255, 255, 255))
+                                text_rect = text_surf.get_rect(x=50, y=150 + i*30)
+                                
+                                # Rectangle de fond pour le texte
+                                bg_rect = text_rect.inflate(20, 10)
+                                pygame.draw.rect(self.screen, (0, 0, 0), bg_rect)
+                                
+                                self.screen.blit(text_surf, text_rect)
+                
+                        pygame.display.flip()
+                        
+                    def run(self):
+                        running = True
+                        # Démarrer la musique au lancement du jeu
+                        pygame.mixer.music.load(self.menu_music)
+                        pygame.mixer.music.set_volume(0.5)
+                        pygame.mixer.music.play(-1)
+                        
+                        while running:
+                            running = self.handle_input()
+                            if not running:
+                                # Arrêter la musique uniquement quand on quitte le jeu
+                                pygame.mixer.music.stop()
+                            
+                            if self.game_state == "game":
+                                self.update()
+                            self.draw()
+                            
+                            self.clock.tick(FPS)
+                        
+                        pygame.quit()
+                        sys.exit()
+                
+                if __name__ == "__main__":
+                    game = Game()
+                    game.run()
+                
+            </pre>
+        </div>
+        <div class="download-section">
+            <h2>Téléchargez PixelRUSH</h2>
+            <p>Découvrez mon jeu créé avec Pygame ! Un runner game captivant où vous devez éviter les obstacles et établir le meilleur score.</p>
+            <a href="https://drive.google.com/file/d/1OFgSi_91IArx_ZFCpKZxMtgQELO_RZ4a/view?usp=sharing" class="download-button" target="_blank">
+                <i class="fas fa-download"></i> Télécharger PixelRUSH
+            </a>
+            <p class="drive-note">Ce lien vous redirigera vers Google Drive pour le téléchargement</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
