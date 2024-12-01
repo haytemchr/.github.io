@@ -505,9 +505,10 @@ body {
 
 .social-links {
     display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
 }
 
 .social-link {
@@ -528,6 +529,26 @@ body {
     background: var(--accent-color);
     color: white;
     transform: translateY(-3px);
+}
+
+.social-links .cv-button {
+    margin: 0;
+    padding: 10px 20px;
+    font-size: 1em;
+    width: auto;
+    text-align: center;
+    background: var(--accent-color);
+    border-radius: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.social-links .cv-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.social-links .cv-button i {
+    margin-left: 8px;
 }
 
 .about-content {
@@ -1025,60 +1046,136 @@ body {
 }
 
 /* Media Queries */
-@media (max-width: 768px) {
-    .header h1 {
-        font-size: 2.5rem;
+@media screen and (max-width: 1200px) {
+    .container {
+        max-width: 95%;
     }
-    
-    .nav-links {
+}
+
+@media screen and (max-width: 992px) {
+    .about-container {
         flex-direction: column;
         align-items: center;
-        padding: 0.5rem 0;
+        gap: 2rem;
     }
-    
-    .section {
-        padding: 60px 0;
+
+    .about-image {
+        width: 100%;
+        max-width: 400px;
     }
-    
-    .experience-grid,
-    .projects-grid,
-    .skills-grid {
-        grid-template-columns: 1fr;
+
+    .about-content {
+        width: 100%;
     }
-    
+
+    .about-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .projects-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    body {
+        padding-top: 0;
+    }
+
+    .navbar {
+        position: static;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .nav-links a {
+        width: 100%;
+        text-align: center;
+        padding: 0.8rem;
+    }
+
+    .header-content {
+        padding: 2rem 1rem;
+    }
+
     .profile-image {
         width: 150px;
         height: 150px;
     }
+
+    .about-cards,
+    .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .info-card {
+        padding: 1.5rem;
+    }
+
+    .exp-container {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-form {
+        padding: 1.5rem;
+    }
 }
 
-@media (max-width: 480px) {
-    .header h1 {
+@media screen and (max-width: 480px) {
+    .section {
+        padding: 3rem 1rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        margin-bottom: 2rem;
+    }
+
+    .header-content h1 {
         font-size: 2rem;
     }
-    
-    .tagline {
-        font-size: 1rem;
-    }
-    
-    .section h2 {
-        font-size: 1.8rem;
-    }
-    
+
     .profile-image {
         width: 120px;
         height: 120px;
     }
+
+    .about-text {
+        padding: 1rem;
+    }
+
+    .highlight-text {
+        font-size: 1.1rem;
+    }
+
+    .info-card,
+    .skill-box,
+    .project-card {
+        padding: 1rem;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+        padding: 0.8rem;
+    }
+
+    .footer {
+        padding: 2rem 1rem;
+    }
 }
 
-@media (max-width: 768px) {
-    .experience-grid,
-    .skills-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .skill-category {
-        padding: 20px;
+/* Amélioration de l'accessibilité tactile */
+@media (hover: none) and (pointer: coarse) {
+    .nav-links a,
+    .social-link,
+    .game-button,
+    button {
+        min-height: 44px;
+        padding: 12px 20px;
     }
 }
 
@@ -1177,4 +1274,40 @@ body {
 
 .game-button:hover i {
     transform: translateX(3px);
+}
+
+.cv-button {
+    display: inline-block;
+    padding: 8px 16px;
+    margin-top: 10px;
+    margin-left: 10px;
+    background: var(--accent-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 0.9em;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cv-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.cv-button i {
+    margin-left: 5px;
+}
+
+.button-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button-group .game-button,
+.button-group .cv-button {
+    margin: 0;
 }
