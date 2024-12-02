@@ -31,6 +31,74 @@ function addLoadAnimations() {
 
 // Initialisation des animations
 document.addEventListener('DOMContentLoaded', () => {
+    // Débogage détaillé de l'animation d'intro
+    console.log('Document chargé');
+
+    // Vérifier tous les éléments de l'animation
+    const body = document.body;
+    const introAnimation = document.querySelector('.intro-animation');
+    const typewriterText = document.querySelector('.typewriter-text');
+
+    console.log('Body:', body);
+    console.log('Intro Animation Element:', introAnimation);
+    console.log('Typewriter Text Element:', typewriterText);
+
+    // Vérifier les styles initiaux
+    if (introAnimation) {
+        console.log('Styles initiaux de introAnimation:', {
+            display: introAnimation.style.display,
+            opacity: introAnimation.style.opacity,
+            visibility: window.getComputedStyle(introAnimation).visibility
+        });
+    }
+
+    if (typewriterText) {
+        console.log('Styles initiaux de typewriterText:', {
+            display: typewriterText.style.display,
+            opacity: typewriterText.style.opacity,
+            width: typewriterText.style.width,
+            visibility: window.getComputedStyle(typewriterText).visibility
+        });
+    }
+
+    // Forcer l'affichage et l'opacité
+    if (introAnimation && typewriterText) {
+        introAnimation.style.display = 'flex';
+        introAnimation.style.opacity = '1';
+        typewriterText.style.display = 'block';
+        typewriterText.style.opacity = '1';
+        typewriterText.style.width = '100%';
+
+        console.log('Styles après modification:', {
+            introAnimationDisplay: introAnimation.style.display,
+            introAnimationOpacity: introAnimation.style.opacity,
+            typewriterTextDisplay: typewriterText.style.display,
+            typewriterTextOpacity: typewriterText.style.opacity,
+            typewriterTextWidth: typewriterText.style.width
+        });
+
+        // Attendre que l'animation d'écriture soit terminée
+        setTimeout(() => {
+            console.log('Début de la transition de sortie');
+            
+            // Faire disparaître l'intro
+            introAnimation.style.opacity = '0';
+            
+            // Afficher le contenu principal
+            body.style.opacity = '1';
+            
+            // Nettoyer l'intro après la transition
+            setTimeout(() => {
+                introAnimation.style.display = 'none';
+                console.log('Intro animation masquée');
+            }, 800);
+        }, 4500);
+    } else {
+        console.error('Éléments de l\'animation introuvables !');
+        console.error('introAnimation:', introAnimation);
+        console.error('typewriterText:', typewriterText);
+    }
+
     addLoadAnimations();
     handleScrollAnimations();
 
@@ -72,73 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Observer les cartes individuellement
-    document.querySelectorAll('.experience-card, .skill-category').forEach(card => {
-        sectionObserver.observe(card);
-    });
-
-    // Smooth Scrolling pour la navigation
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // Sticky Navbar avec effet de fondu
-    const navbar = document.querySelector('.navbar');
-    let lastScroll = 0;
-
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll <= 0) {
-            navbar.classList.remove('scroll-up');
-            return;
-        }
-        
-        if (currentScroll > lastScroll && !navbar.classList.contains('scroll-down')) {
-            navbar.classList.remove('scroll-up');
-            navbar.classList.add('scroll-down');
-        } else if (currentScroll < lastScroll && navbar.classList.contains('scroll-down')) {
-            navbar.classList.remove('scroll-down');
-            navbar.classList.add('scroll-up');
-        }
-        lastScroll = currentScroll;
-    });
-
-    // Animation des cartes d'expérience
-    document.querySelectorAll('.experience-card').forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'all 0.5s ease';
-        card.dataset.delay = `${index * 200}ms`;
-        card.addEventListener('mouseenter', () => {
-            card.style.transform = 'translateY(-5px)';
-        });
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'translateY(0)';
-        });
-    });
-
-    // Animation des compétences
-    const skillCategories = document.querySelectorAll('.skill-category');
-    skillCategories.forEach((category, index) => {
-        category.style.opacity = '0';
-        category.style.transform = 'translateY(20px)';
-        category.style.transition = 'all 0.5s ease';
-        category.dataset.delay = `${index * 200}ms`;
-    });
-
-    // Animation des items de compétences
     document.querySelectorAll('.skill-item').forEach(item => {
         item.addEventListener('mouseenter', () => {
             item.style.transform = 'scale(1.1)';
@@ -147,24 +148,4 @@ document.addEventListener('DOMContentLoaded', () => {
             item.style.transform = 'scale(1)';
         });
     });
-
-    // Animation du header
-    const headerContent = document.querySelector('.header-content'); 
-    if (headerContent) {
-        setTimeout(() => {
-            headerContent.style.opacity = '1';
-            headerContent.style.transform = 'translateY(0)';
-        }, 500);
-    }
-
-    // Animation de la photo de profil
-    const profileImage = document.querySelector('.profile-image');
-    if (profileImage) {
-        profileImage.addEventListener('mouseenter', () => {
-            profileImage.style.transform = 'scale(1.05)';
-        });
-        profileImage.addEventListener('mouseleave', () => {
-            profileImage.style.transform = 'scale(1)';
-        });
-    }
 });
